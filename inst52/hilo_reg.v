@@ -12,7 +12,7 @@ module hilo_reg(
 		if(rst) begin
 			hi <= 0;
 			lo <= 0;
-		end else if (we) begin
+		end else if (we > 2'b00) begin
 			hi <= (we[1]) ? hi_i : hi;
 			lo <= (we[0]) ? lo_i : lo;
 		end
