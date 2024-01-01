@@ -29,11 +29,16 @@ module datapath(
 	//writeback stage
 	input wire memtoregW,
 	input wire regwriteW,
-	output wire flushW
+	output wire flushW,
+	// debug 
+	output wire [31:0] pcW,
+    output wire [4:0] writeregW,
+    output wire [31:0] resultW
     );
 	
 	//fetch stage
-	wire stallF;
+	wire stallF,flushF;
+	wire [31:0] newPC;
 	//FD
 	wire [31:0] pcnextFD,pcnextbrFD,pcplus4F,pcplus8F,pcbranchD,pcnextJFD;
 	//decode stage
@@ -70,13 +75,12 @@ module datapath(
 	wire [5:0] opM;
 	wire [31:0] writedataM;
 	//writeback stage
-	wire [4:0] writeregW;
-	wire [31:0] aluoutW,readdataW,resultW,readdata2W;
-	wire [31:0] pcW;
+	wire [31:0] aluoutW,readdataW,readdata2W;
 	wire [5:0] opW;
 	//hazard detection
 	hazard h(
 		//fetch stage
+		// stallF,newPC,flushF,
 		stallF,
 		//decode stage
 		rsD,rtD,
@@ -105,6 +109,7 @@ module datapath(
 	regfile rf(clk,regwriteW,rsD,rtD,writeregW,resultW,srcaD,srcbD);
 	/*-----------------------------取指---------------------------------*/
 	//fetch stage logic
+	// pc #(32) pcreg(clk,rst,~stallF,flushF,pcnextFD,newPC,pcF);
 	pc #(32) pcreg(clk,rst,~stallF,pcnextFD,pcF);
 	adder pcadd1(pcF,32'b100,pcplus4F);
 	adder pcadde(pcF,32'b1000,pcplus8F);
@@ -159,7 +164,7 @@ module datapath(
 	// 选择写入hilo寄存器的是alu结果还是除法器结果
 	mux2 #(64) hiloin({hi_alu_outE,lo_alu_outE},{hi_div_outE,lo_div_outE},div_signalE,{hi_mux_outE,lo_mux_outE});
 	// hilo寄存器
-	hilo_reg hilo(clk,rst,hilo_weE,hi_mux_outE,lo_mux_outE,hiE,loE);
+	hilo_reg hilo(clk,rst,flushE,hilo_weE,hi_mux_outE,lo_mux_outE,hiE,loE);
 	// 选择写入的寄存器为rt还是rd
 	mux2 #(5) wrmux(rtE,rdE,regdstE,writeregE);
 	//JALR指令选择写寄存器，没有指定时默认为31

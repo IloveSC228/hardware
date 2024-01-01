@@ -2,13 +2,14 @@
 
 module hazard(
 	//fetch stage
-	output wire stallF,
+	output wire stallF,flushF,
 	//decode stage
 	input wire[4:0] rsD,rtD,
 	input wire branchD,
 	output wire forwardaD,forwardbD,
 	output wire stallD,
 	input wire jumpD,jrD,balD,jalrD,
+	output wire flushD,
 	//execute stage
 	input wire[4:0] rsE,rtE,
 	input wire[4:0] writereg2E,alucontrolE,
@@ -22,12 +23,15 @@ module hazard(
 	input wire regwriteM,
 	input wire memtoregM,
 	output wire flushM,
+	input wire [31:0] excepttype, epc_o,
+	output reg [31:0] newPC,
 	//write back stage
 	input wire[4:0] writeregW,
-	input wire regwriteW
+	input wire regwriteW,
+	output wire flushW
     );
 
-	wire lwstallD,branchstallD,stall;
+	wire lwstallD,branchstallD,jrstallD,stall_divE,flush_except;
 
 	//forwarding sources to D stage (branch equality,jal,jalr,bal)
 	assign forwardaD = (rsD != 0 & rsD == writeregM & regwriteM);
@@ -58,15 +62,36 @@ module hazard(
 		end
 	end
 
-	//stalls
 	assign #1 lwstallD = memtoregE & (rtE == rsD | rtE == rtD);
 	assign #1 branchstallD = (branchD & regwriteE & (writereg2E == rsD | writereg2E == rtD)) | (branchD & memtoregM & (writeregM == rsD | writeregM == rtD));
-	assign #1 jalstallD = (jrD | jalrD) & ((regwriteE & writereg2E == rsD) | (memtoregM & writeregM == rsD)); // 增加jr和jalr的暂停
+	assign #1 jrstallD = (jrD | jalrD) & ((regwriteE & writereg2E == rsD) | (memtoregM & writeregM == rsD)); // 增加jr和jalr的暂停
 	assign #1 stall_divE = ((alucontrolE == `DIV_CONTROL | alucontrolE == `DIVU_CONTROL)) & ~ready_oE;
+	assign #1 flush_except = (excepttype != 32'h00000000);
+	//stalls
 	assign #1 stallF = stallD;
-	assign #1 stallD = lwstallD | stall_divE | branchstallD | jalstallD;
+	assign #1 stallD = lwstallD | stall_divE | branchstallD | jrstallD;
 	assign #1 stallE = stall_divE;
 	// flushs
-	assign #1 branchFlushD = branchD & !balD;
-	assign #1 flushE = lwstallD | jumpD | jrD | branchFlushD;
+	assign #1 flushF = flush_except;
+	assign #1 flushD = flush_except;
+	assign #1 flushE = lwstallD | branchstallD | flush_except;
+	assign #1 flushM = flush_except;
+	assign #1 flushW = flush_except;
+
+	// cp0->bfc00380
+	always @(*) begin
+		if (excepttype != 32'h00000000) begin
+			case (excepttype)
+				32'h00000001: newPC <= 32'hbfc00380;
+				32'h00000004: newPC <= 32'hbfc00380;
+				32'h00000005: newPC <= 32'hbfc00380;
+				32'h00000008: newPC <= 32'hbfc00380;
+				32'h00000009: newPC <= 32'hbfc00380;
+				32'h0000000a: newPC <= 32'hbfc00380;
+				32'h0000000c: newPC <= 32'hbfc00380;
+				32'h0000000e: newPC <= epc_o;
+				default: ;
+			endcase
+		end
+	end
 endmodule

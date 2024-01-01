@@ -22,8 +22,11 @@ module aludec(
 			`SLTIU_OP: alucontrol <= `SLTU_CONTROL;
 			// 访存
 			`MEM_OP: alucontrol <= `ADD_CONTROL; // 访存都是用add算地址
+			// 特权
+			`MFC0_OP: alucontrol <= `MFC0_CONTROL;
+			`MTC0_OP: alucontrol <= `MTC0_CONTROL;
 			// R-type
-			default : case (funct) 
+			`R_TYPE_OP : case (funct) 
 				// 逻辑运算
 				`AND: alucontrol <= `AND_CONTROL;
 				`OR: alucontrol <= `OR_CONTROL;
@@ -54,6 +57,7 @@ module aludec(
 				`DIVU: alucontrol <= `DIVU_CONTROL;
 				default:  alucontrol <= 5'b0;
 			endcase
+			default: alucontrol <= 5'b0;
 		endcase
 	end
 	end

@@ -67,6 +67,5 @@ module hazard(
 	assign #1 stallD = lwstallD | stall_divE | branchstallD | jalstallD;
 	assign #1 stallE = stall_divE;
 	// flushs
-	assign #1 branchFlushD = branchD & !balD;
-	assign #1 flushE = lwstallD | jumpD | jrD | branchFlushD;
+	assign #1 flushE = lwstallD | jumpD | jrD | branchstallD;
 endmodule

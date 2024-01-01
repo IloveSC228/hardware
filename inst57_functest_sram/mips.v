@@ -6,8 +6,13 @@ module mips(
 	input wire[31:0] instrF, // 从instram读取到的指令
 	output wire [3:0] memwriteM, // dataram的写信号
 	output wire memenM, // dataram的使能信号
-	output wire[31:0] aluoutM,writedataM, // alu的运算结果，dataram的操作地址 / dataram的写数据
-	input wire[31:0] readdataM  // dataram读数据
+	output wire [31:0] aluoutM,writedataM, // alu的运算结果，dataram的操作地址 / dataram的写数据
+	input wire [31:0] readdataM,  // dataram读数据
+	// debug 
+	output wire [31:0] pcW,
+	output wire regwriteW,
+    output wire [4:0] writeregW,
+    output wire [31:0] resultW
     );
 	// 取指 f
 
@@ -15,7 +20,7 @@ module mips(
 	wire pcsrcD,equalD; 
     wire [5:0] opD,functD;
 	wire [31:0] instrD;
-	wire stallD,branchD,jumpD,jalD,jrD,balD,jalrD;
+	wire stallD,branchD,jumpD,jalD,jrD,balD,jalrD,invalidD;
     // 运算 e
 	wire regdstE,alusrcE,memtoregE,regwriteE,flushE,stallE;	
 	wire [4:0] alucontrolE;
@@ -23,8 +28,9 @@ module mips(
     // 写存 m
     wire memtoregM,regwriteM;
 	wire flushM;
+	wire cp0_weM,cp0_reM;
     // 写回 w
-	wire memtoregW,regwriteW;
+	wire memtoregW;
 	wire flushW;
 
 	controller c(
@@ -33,7 +39,7 @@ module mips(
 	functD,
 	instrD,
 	pcsrcD,branchD,equalD,jumpD,jalD,jrD,balD,jalrD,
-	stallD,
+	stallD,invalidD,
 	//execute stage
 	flushE,stallE,
 	memtoregE,alusrcE,
@@ -42,7 +48,7 @@ module mips(
 	hilo_weE,
 	//mem stage
 	memtoregM,regwriteM,memenM,
-	flushM,
+	flushM,cp0_weM,cp0_reM,
 	//write back stage
 	memtoregW,regwriteW,
 	flushW
@@ -57,7 +63,9 @@ module mips(
 	pcsrcD,branchD,
 	jumpD,jalD,jrD,balD,jalrD,
 	equalD,stallD,
-	opD,functD,instrD,
+	opD,functD,
+	instrD,
+	invalidD,
 	//execute stage
 	memtoregE,
 	alusrcE,regdstE,
@@ -70,11 +78,17 @@ module mips(
 	regwriteM,
 	aluoutM,writedataM,
 	readdataM,
-	flushM,memwriteM,
+	flushM,
+	memwriteM,
+	cp0_weM,cp0_reM,
 	//writeback stage
 	memtoregW,
 	regwriteW,
-	flushW
+	flushW,
+	// debug
+	pcW,
+	writeregW,
+	resultW
 	);
 	
 endmodule
