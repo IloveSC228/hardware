@@ -62,21 +62,21 @@ module hazard(
 		end
 	end
 
-	assign #1 lwstallD = memtoregE & (rtE == rsD | rtE == rtD);
-	assign #1 branchstallD = (branchD & regwriteE & (writereg2E == rsD | writereg2E == rtD)) | (branchD & memtoregM & (writeregM == rsD | writeregM == rtD));
-	assign #1 jrstallD = (jrD | jalrD) & ((regwriteE & writereg2E == rsD) | (memtoregM & writeregM == rsD)); // 增加jr和jalr的暂停
-	assign #1 stall_divE = ((alucontrolE == `DIV_CONTROL | alucontrolE == `DIVU_CONTROL)) & ~ready_oE;
-	assign #1 flush_except = (excepttype != 32'h00000000);
+	assign lwstallD = memtoregE & (rtE == rsD | rtE == rtD);
+	assign branchstallD = (branchD & regwriteE & (writereg2E == rsD | writereg2E == rtD)) | (branchD & memtoregM & (writeregM == rsD | writeregM == rtD));
+	assign jrstallD = (jrD | jalrD) & ((regwriteE & writereg2E == rsD) | (memtoregM & writeregM == rsD)); // 增加jr和jalr的暂停
+	assign stall_divE = ((alucontrolE == `DIV_CONTROL | alucontrolE == `DIVU_CONTROL)) & ~ready_oE;
+	assign flush_except = (excepttype != 32'h00000000);
 	//stalls
-	assign #1 stallF = stallD;
-	assign #1 stallD = lwstallD | stall_divE | branchstallD | jrstallD;
-	assign #1 stallE = stall_divE;
+	assign stallF = stallD;
+	assign stallD = lwstallD | stall_divE | branchstallD | jrstallD;
+	assign stallE = stall_divE;
 	// flushs
-	assign #1 flushF = flush_except;
-	assign #1 flushD = flush_except;
-	assign #1 flushE = lwstallD | branchstallD | flush_except;
-	assign #1 flushM = flush_except;
-	assign #1 flushW = flush_except;
+	assign flushF = flush_except;
+	assign flushD = flush_except;
+	assign flushE = lwstallD | branchstallD | flush_except;
+	assign flushM = flush_except;
+	assign flushW = flush_except;
 
 	// cp0->bfc00380
 	always @(*) begin

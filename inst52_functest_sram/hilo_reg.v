@@ -13,7 +13,7 @@ module hilo_reg(
 			hi <= 0;
 			lo <= 0;
 		end else if (~flushE) begin
-			if (we) begin
+			if (we > 2'b00) begin
 				hi <= (we[1]) ? hi_i : hi;
 				lo <= (we[0]) ? lo_i : lo;
 			end
