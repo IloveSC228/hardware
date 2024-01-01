@@ -6,8 +6,13 @@ module mips(
 	input wire[31:0] instrF, // 从instram读取到的指令
 	output wire [3:0] memwriteM, // dataram的写信号
 	output wire memenM, // dataram的使能信号
-	output wire[31:0] aluoutM,writedataM, // alu的运算结果，dataram的操作地址 / dataram的写数据
-	input wire[31:0] readdataM  // dataram读数据
+	output wire [31:0] aluoutM,writedataM, // alu的运算结果，dataram的操作地址 / dataram的写数据
+	input wire [31:0] readdataM,  // dataram读数据
+	// debug 
+	output wire [31:0] pcW,
+	output wire regwriteW,
+    output wire [4:0] writeregW,
+    output wire [31:0] resultW
     );
 	// 取指 f
 
@@ -24,7 +29,7 @@ module mips(
     wire memtoregM,regwriteM;
 	wire flushM;
     // 写回 w
-	wire memtoregW,regwriteW;
+	wire memtoregW;
 	wire flushW;
 
 	controller c(
@@ -74,7 +79,10 @@ module mips(
 	//writeback stage
 	memtoregW,
 	regwriteW,
-	flushW
+	flushW,
+	pcW,
+	writeregW,
+	resultW
 	);
 	
 endmodule

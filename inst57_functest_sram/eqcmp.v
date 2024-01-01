@@ -12,8 +12,8 @@ module eqcmp(
 		case(opcodeD)
 			`BEQ: y = (a == b) ? 1 : 0;
 			`BNE: y = (a == b) ? 0 : 1;
-			`BGTZ: y = (a > b) ? 1 : 0;
-			`BLEZ: y = (a > b) ? 0 : 1;
+			`BGTZ: y = ((a[31] == 0) && a != 32'b0) ? 1 : 0;
+			`BLEZ: y = ((a[31] == 1) || a == 32'b0) ? 1 : 0;
 			`REGIMM_INST: case (rtD)
 				`BGEZ, `BGEZAL: y = (a[31] == 1) ? 0 : 1; 
 				`BLTZ, `BLTZAL: y = (a[31] == 1) ? 1 : 0; // 负数小于0

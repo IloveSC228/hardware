@@ -81,8 +81,8 @@ module maindec(
 				// 移位运算
 				`SLL,`SRL,`SRA,`SLLV,`SRLV,`SRAV: controls <= {11'b1100000000,`R_TYPE_OP,3'b000};
 				// 数据移动
-				`MTHI: controls <= {10'b0000000000,`R_TYPE_OP,3'b000};
-				`MTLO: controls <= {10'b0000000000,`R_TYPE_OP,3'b000};
+				`MTHI: controls <= {10'b0000000000,`R_TYPE_OP,3'b010};
+				`MTLO: controls <= {10'b0000000000,`R_TYPE_OP,3'b001};
 				`MFHI: controls <= {10'b1100000000,`R_TYPE_OP,3'b000};
 				`MFLO: controls <= {10'b1100000000,`R_TYPE_OP,3'b000};
 				// 算术运算

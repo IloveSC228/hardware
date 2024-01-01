@@ -23,7 +23,7 @@ module aludec(
 			// 访存
 			`MEM_OP: alucontrol <= `ADD_CONTROL; // 访存都是用add算地址
 			// R-type
-			default : case (funct) 
+			`R_TYPE_OP : case (funct) 
 				// 逻辑运算
 				`AND: alucontrol <= `AND_CONTROL;
 				`OR: alucontrol <= `OR_CONTROL;
@@ -54,6 +54,7 @@ module aludec(
 				`DIVU: alucontrol <= `DIVU_CONTROL;
 				default:  alucontrol <= 5'b0;
 			endcase
+			default: alucontrol <= 5'b0;
 		endcase
 	end
 	end

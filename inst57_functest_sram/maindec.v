@@ -11,7 +11,8 @@ module maindec(
 	output wire jump,jal,jr,bal,jalr,
 	output wire [3:0] aluop,
 	output wire memen,
-	output wire [1:0] hilo_we
+	output wire [1:0] hilo_we,
+	output reg invalidD, cp0_we, cp0_re
     );
 	wire [4:0] rs, rt, rd;
 	wire [5:0] op, funct;
@@ -37,8 +38,10 @@ module maindec(
     hilo_we 是否需要写入hilo寄存器 1是 0否, 高位写高位，低位写低位
 	*/
 	always @(*) begin
-
-		if (~stallD)begin
+		invalidD = 0;
+		cp0_we = 0;
+		cp0_re = 0;
+		if (~stallD) begin
 			case (op)
 			// 逻辑运算
 			`ANDI: controls <= {10'b1010000000,`ANDI_OP,3'b000};
@@ -63,7 +66,7 @@ module maindec(
 				`BLTZAL: controls <= {10'b1001000010,`USELESS_OP,3'b000};
 				`BGEZ: controls <= {10'b0001000000,`USELESS_OP,3'b000};
 				`BGEZAL: controls <= {10'b1001000010,`USELESS_OP,3'b000};
-				default: controls <= 17'b0000000000000;
+				default: {controls, invalidD} <= {17'b0000000000000, 1'b1};
 			endcase
 			// 访存
 			`LB: controls <= {10'b1010100000,`MEM_OP,3'b100};
@@ -74,6 +77,19 @@ module maindec(
 			`SB: controls <= {10'b0010000000,`MEM_OP,3'b100};
 			`SH: controls <= {10'b0010000000,`MEM_OP,3'b100};
 			`SW: controls <= {10'b0010000000,`MEM_OP,3'b100};
+			// 特权指令
+			`SPECIAL3_INST: case(rs)
+				`MTC0: begin
+					cp0_we <= 1;
+					controls <= {10'b0000000000,`MTC0_OP,3'b000};
+				end
+				`MFC0: begin
+					cp0_re <= 1;
+					controls <= {10'b1000000000,`MFC0_OP,3'b000};
+				end
+				`ERET: controls <= {10'b1000000000,`USELESS_OP,3'b000};
+				default: {controls, invalidD} <= {17'b0000000000000, 1'b1};
+			endcase
 			// R-Type
 			`R_TYPE: case(funct)
 				// 逻辑运算
@@ -81,8 +97,8 @@ module maindec(
 				// 移位运算
 				`SLL,`SRL,`SRA,`SLLV,`SRLV,`SRAV: controls <= {11'b1100000000,`R_TYPE_OP,3'b000};
 				// 数据移动
-				`MTHI: controls <= {10'b0000000000,`R_TYPE_OP,3'b000};
-				`MTLO: controls <= {10'b0000000000,`R_TYPE_OP,3'b000};
+				`MTHI: controls <= {10'b0000000000,`R_TYPE_OP,3'b010};
+				`MTLO: controls <= {10'b0000000000,`R_TYPE_OP,3'b001};
 				`MFHI: controls <= {10'b1100000000,`R_TYPE_OP,3'b000};
 				`MFLO: controls <= {10'b1100000000,`R_TYPE_OP,3'b000};
 				// 算术运算
@@ -91,9 +107,12 @@ module maindec(
 				// 跳转
 				`JR: controls <= {10'b0000000100,`USELESS_OP,3'b000};
 				`JALR: controls <= {10'b1100000001,`USELESS_OP,3'b000};
-				default: controls <= 17'b0000000000000;
+				// 内陷
+				`SYSCALL: controls <= {10'b0000000000,`USELESS_OP,3'b000};
+				`BREAK: controls <= {10'b0000000000,`USELESS_OP,3'b000};
+				default: {controls, invalidD} <= {17'b0000000000000, 1'b1};
 			endcase
-			default: controls <= 17'b0000000000000;//illegal op
+			default: {controls, invalidD} <= {17'b0000000000000, 1'b1};//illegal op
 			endcase
 		end
 	end
